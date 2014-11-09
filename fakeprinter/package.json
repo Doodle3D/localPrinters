@@ -11,6 +11,7 @@
   "dependencies": {
     "debug": "^2.1.0",
     "keypress": "^0.2.1",
+    "node-localstorage": "^0.3.4",
     "request": "^2.47.0",
     "socket.io-client": "^1.2.0",
     "socket.io-stream": "^0.6.0"
