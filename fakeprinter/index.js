@@ -108,6 +108,7 @@ function connect() {
       printer.connectTo("/"+printerID+"-webcam",printerKey,{forceNew:true},function(err,nsp) {
         if (err) throw new Error(err);
         takeSnapshot();
+        var snapshotTimeout;
         function takeSnapshot() {
           console.log('tick cam');
           var snapshot = spawn('imagesnap', ['-'])
@@ -118,8 +119,11 @@ function connect() {
           convert.stdout.pipe(stream);
           convert.stdout.on("end",function() {
             console.log("convert end");
-            setTimeout(takeSnapshot,200);
+            clearTimeout(snapshotTimeout);
+            takeSnapshot();
           });
+          clearTimeout(snapshotTimeout);
+          snapshotTimeout = setTimeout(takeSnapshot,5000);
         }
       });
     },500);
