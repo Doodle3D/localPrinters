@@ -1,0 +1,23 @@
+.printer {
+  width: 640px;
+  background: #333;
+  margin: 10px;
+  display: block;
+  float: left;
+}
+.printer img{
+  width: 640px;
+}
+.printer p{
+  color: #fff;
+  margin: 0.5em 0.5em;
+}
+.printer pre{
+  color: #eee;
+  font-size: 80%;
+  margin: 0.5em 0.5em;
+}
+
+body {
+  
+}
