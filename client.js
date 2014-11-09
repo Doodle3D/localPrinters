@@ -1,20 +1,47 @@
 //var CLOUD_URL = "https://cloud.doodle3d.com";
 var CLOUD_URL = "http://localhost:5000";
-var USER_KEY = "545d6265fb8f375a34ca5e04hKTvv2rqiCF8IiEhaCai";
-
+var userKey;
 var container = document.querySelector("#printers");
-var localPrinters = connect("/localprinters");
-localPrinters.once("connect",function() {
-  console.log("localprinters connected");
-  localPrinters.on("appeared",function(printerData) {
-    console.log("localprinters appeared: ",printerData.id,printerData.name);
-    addPrinter(printerData);
+var rootSocket;
+init();
+function init() {
+  var appData = localStorage.getItem("localPrinters");
+  console.log("appData: ",appData);
+  if(appData === null) return register();
+  appData = JSON.parse(appData);
+  userKey = appData.userKey;
+  rootSocket = connect("/");
+  rootSocket.once("connect",function() {
+    console.log("/: connected");
+    var localPrinters = connect("/localprinters");
+    localPrinters.once("connect",function() {
+      console.log("localprinters connected");
+      localPrinters.on("appeared",function(printerData) {
+        console.log("localprinters appeared: ",printerData.id,printerData.name);
+        addPrinter(printerData);
+      });
+      localPrinters.on("disappeared",function(printerData) {
+        console.log("localprinters disappeared: ",printerData.id,printerData.name);
+        removePrinter(printerData);
+      });
+    });
   });
-  localPrinters.on("disappeared",function(printerData) {
-    console.log("localprinters disappeared: ",printerData.id,printerData.name);
-    removePrinter(printerData);
+  rootSocket.on('error',function(err) {
+    if(err === "User unknown") register();
   });
-});
+}
+function register() {
+  console.log("register user");
+  request.post(CLOUD_URL+"/user/register", function(err, httpResponse, body) {
+    if(err) throw new Error("printer register error: "+err);
+    if(typeof body !== "object") {
+      body = JSON.parse(body);
+    }
+    console.log("user registered");
+    localStorage.setItem("localPrinters",JSON.stringify({userKey:body.key}));
+    init();
+  });
+}
 
 function addPrinter(printerData) {
   //{id, name, features, online}
@@ -88,7 +115,7 @@ function getPrinter(printerData) {
 
 function connect(nsp) {
   console.log("connecting to: ",nsp);
-  var nspURL = CLOUD_URL+nsp+'?key='+USER_KEY;
+  var nspURL = CLOUD_URL+nsp+'?key='+userKey;
   var socket = io(nspURL, {forceNew:true});
   socket.on("error",function(data) {
     console.log(nsp+": error: ",data);
