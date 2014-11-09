@@ -1,11 +1,11 @@
-var CLOUD_URL = "https://cloud.doodle3d.com";
+//var CLOUD_URL = "https://cloud.doodle3d.com";
+var CLOUD_URL = "http://localhost:5000";
 var USER_KEY = "545d6265fb8f375a34ca5e04hKTvv2rqiCF8IiEhaCai";
 
 var container = document.querySelector("#printers");
-var root = connect("/");
 var localPrinters = connect("/localprinters");
 localPrinters.once("connect",function() {
-  console.log("localprinters connect");
+  console.log("localprinters connected");
   localPrinters.on("appeared",function(printerData) {
     console.log("localprinters appeared: ",printerData.id,printerData.name);
     addPrinter(printerData);
@@ -87,7 +87,7 @@ function getPrinter(printerData) {
 }
 
 function connect(nsp) {
-  console.log("connect: ",nsp);
+  console.log("connecting to: ",nsp);
   var nspURL = CLOUD_URL+nsp+'?key='+USER_KEY;
   var socket = io(nspURL, {forceNew:true});
   socket.on("error",function(data) {
