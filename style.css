@@ -25,7 +25,7 @@ body {
 
 @media (max-width:640px) {
   body {
-    padding: 10px 0 0 0;
+    padding: 0;
   }
   .printer {
     margin: 0 0 10px 0;
