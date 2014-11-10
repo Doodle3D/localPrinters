@@ -53,6 +53,7 @@ process.stdin.on('keypress', function (ch, key) {
       break;
     case 'd':
       console.log("disconnect");
+      clearTimeout(snapshotTimeout);
       for(var i in sockets) {
         sockets[i].disconnect();
       }
@@ -112,8 +113,8 @@ function connect() {
 }
 
 function takeSnapshot() {
-  console.log('taking snapshot');
   if(!webcamNSP || !webcamNSP.connected) return;
+  console.log('taking snapshot');
   var snapshot = spawn('imagesnap', ['-'])
   var convert = spawn('convert', ['-', '-quality', '80', '-resize', '640x360', 'JPEG:-']);
   var stream = ss.createStream();
@@ -123,7 +124,7 @@ function takeSnapshot() {
   convert.stdout.on("end",function() {
     console.log("  snapshot was send");
     clearTimeout(snapshotTimeout);
-    takeSnapshot();
+    snapshotTimeout = setTimeout(takeSnapshot,1000);
   });
   clearTimeout(snapshotTimeout);
   snapshotTimeout = setTimeout(takeSnapshot,5000);
