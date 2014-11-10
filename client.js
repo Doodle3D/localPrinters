@@ -3,6 +3,7 @@ var CLOUD_URL = "http://localhost:5000";
 var userKey;
 var container = document.querySelector("#printers");
 var rootSocket;
+//var socketHash = {};
 init();
 function init() {
   var appData = localStorage.getItem("localPrinters");
@@ -10,17 +11,14 @@ function init() {
   if(appData === null) return register();
   appData = JSON.parse(appData);
   userKey = appData.userKey;
-  rootSocket = connect("/");
+  rootSocket = connectTo("/");
   rootSocket.once("connect",function() {
-    console.log("/: connected");
-    var localPrinters = connect("/localprinters");
-    localPrinters.once("connect",function() {
-      console.log("localprinters connected");
-      localPrinters.on("appeared",function(printerData) {
+    connectTo("/localprinters",function(err,nsp) {
+      nsp.on("appeared",function(printerData) {
         console.log("localprinters appeared: ",printerData.id,printerData.name);
         addPrinter(printerData);
       });
-      localPrinters.on("disappeared",function(printerData) {
+      nsp.on("disappeared",function(printerData) {
         console.log("localprinters disappeared: ",printerData.id,printerData.name);
         removePrinter(printerData);
       });
@@ -43,11 +41,12 @@ function register() {
   });
 }
 
+var counter = 0;
 function addPrinter(printerData) {
   //{id, name, features, online}
   
   if(getPrinter(printerData)) return;
-  console.log("addCam: ",printerData.id,printerData.name);
+  console.log("addPrinter: ",printerData.id,printerData.name);
   
   var printerElement = document.createElement("div");
   container.appendChild(printerElement);
@@ -70,33 +69,32 @@ function addPrinter(printerData) {
   for(var i in ignores) {
     delete printerDataHM[ignores[i]];
   }
-  var pridSocket = connect("/"+printerData.id);
-  pridSocket.once("connect",function() {
-    createAnyEvents(pridSocket);
-    console.log("camSocket connected");
-    pridSocket.on("any",function(eventType,data) {
-      console.log(printerData.id+": event: ",eventType,data);
+  connectTo("/"+printerData.id,function(err,nsp) {
+    var count = counter++;
+    
+    createAnyEvents(nsp);
+    nsp.on("any",function(eventType,data) {
+      console.log(printerData.id+": "+count+": event: ",eventType,data);
       //printerData
       printerDataHM.prid[eventType] = data;
       dataElement.textContent = YAML.stringify(printerDataHM,4);
     });
   });
   
-  var camSocket = connect("/"+printerData.id+"-webcam");
-  camSocket.once("connect",function() {
-    console.log("camSocket connected");
-    
-    ss(camSocket).on('image', function(stream) {
-      console.log(printerData.id+": on image: ");
+  connectTo("/"+printerData.id+"-webcam",function(err,nsp) {
+    var imageCounter = 0;
+    ss(nsp).on('image', function(stream) {
+      var imageIndex = imageCounter++;
+      console.log(printerData.id+": "+imageIndex+": on image");
       var binaryString = "";
       stream.on('data', function(data) {
-          //console.log('on data');
-          for(var i=0;i<data.length;i++) {
-              binaryString+=String.fromCharCode(data[i]);
-          }
+        console.log(printerData.id+": "+imageIndex+": on data");
+        for(var i=0;i<data.length;i++) {
+            binaryString+=String.fromCharCode(data[i]);
+        }
       });
       stream.on('end', function() {
-        //console.log('on end');
+        console.log(printerData.id+": "+imageIndex+": on end");
         webcamElement.setAttribute("src","data:image/jpg;base64,"+window.btoa(binaryString));
         binaryString = "";
       });
@@ -106,20 +104,32 @@ function addPrinter(printerData) {
 function removePrinter(printerData) {
   var img = getPrinter(printerData);
   if(!img) return;
-  console.log("removeCam: ",printerData.id,printerData.name);
+  console.log("removePrinter: ",printerData.id,printerData.name);
+  
   container.removeChild(img);
 }
 function getPrinter(printerData) {
   return document.querySelector("#printers #printer-"+printerData.id);
 }
 
-function connect(nsp) {
-  console.log("connecting to: ",nsp);
+function connectTo(nsp,callback) {
+  console.log(nsp+": connecting");
+  //if(socketHash[nsp]) return socket;
+  //console.log(nsp+": really connecting");
   var nspURL = CLOUD_URL+nsp+'?key='+userKey;
-  var socket = io(nspURL, {forceNew:true});
-  socket.on("error",function(data) {
-    console.log(nsp+": error: ",data);
-  });
+  //var socket = io(nspURL, {forceNew:true});
+  //socketHash[nsp] = socket;
+  var socket = io(nspURL);
+  if(!socket.connected) {
+    socket.once('connect',function() {
+      console.log(nsp+": connected");
+      if(callback) callback(null,socket);
+    });
+    socket.once('error',function(err) {
+      console.log(nsp+": error: ",err);
+      if(callback) callback(err);
+    });
+  }
   return socket;
 }
 function createAnyEvents(socket) {
