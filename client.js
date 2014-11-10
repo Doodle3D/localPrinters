@@ -1,5 +1,5 @@
-//var CLOUD_URL = "https://cloud.doodle3d.com";
-var CLOUD_URL = "http://localhost:5000";
+var CLOUD_URL = "https://cloud.doodle3d.com";
+//var CLOUD_URL = "http://localhost:5000";
 var userKey;
 var container = document.querySelector("#printers");
 var rootSocket;

@@ -6,8 +6,8 @@ var ss = require('socket.io-stream');
 var LocalStorage = require('node-localstorage').LocalStorage;
 var localStorage = new LocalStorage('./localStorage');
 
-//var CLOUD_URL = "https://cloud.doodle3d.com";
-var CLOUD_URL = "http://localhost:5000";
+var CLOUD_URL = "https://cloud.doodle3d.com";
+//var CLOUD_URL = "http://localhost:5000";
 var APP_NAME = "localprinters-fakeprinter";
 var pridNSP;
 var printerNSP;
