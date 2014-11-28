@@ -22,6 +22,14 @@ function init() {
         console.log("localprinters disappeared: ",printerData.id,printerData.name);
         removePrinter(printerData);
       });
+      nsp.on("list",function(printersData) {
+        var $noprinters = document.getElementById("noprinters");
+        if(printersData.printers.length === 0) {
+          $noprinters.className = "enable";
+        } else {
+          $noprinters.className = "";
+        }
+      });
     });
   });
   rootSocket.on('error',function(err) {

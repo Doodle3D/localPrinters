@@ -23,6 +23,17 @@ body {
   margin: 0.5em 0.5em;
 }
 
+#noprinters {
+  display: none;
+  background: #333;
+  margin: 0 10px 10px 10px;
+  color: #fff;
+  padding: 0.5em 0.5em;
+}
+#noprinters.enable{
+  display: block;
+}
+
 @media (max-width:640px) {
   body {
     padding: 0;
