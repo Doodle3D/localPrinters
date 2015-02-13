@@ -3,7 +3,9 @@ var CLOUD_URL = "https://cloud.doodle3d.com";
 var userKey;
 var container = document.querySelector("#printers");
 var rootSocket;
-//var socketHash = {};
+var printerSockets = {};
+var webcamSockets = {};
+
 init();
 function init() {
   var appData = localStorage.getItem("localPrinters");
@@ -80,6 +82,8 @@ function addPrinter(printerData) {
   connectTo("/"+printerData.id,function(err,nsp) {
     var count = counter++;
     
+    printerSockets[printerData.id] = nsp;
+    
     createAnyEvents(nsp);
     nsp.on("any",function(eventType,data) {
       console.log(printerData.id+": "+count+": event: ",eventType,data);
@@ -91,9 +95,10 @@ function addPrinter(printerData) {
   
   connectTo("/"+printerData.id+"-webcam",function(err,nsp) {
     var imageCounter = 0;
+    webcamSockets[printerData.id] = nsp;
     ss(nsp).on('image', function(stream) {
       var imageIndex = imageCounter++;
-      console.log(printerData.id+": "+imageIndex+": on image");
+      //console.log(printerData.id+": "+imageIndex+": on image");
       var binaryString = "";
       stream.on('data', function(data) {
         console.log(printerData.id+": "+imageIndex+": on data");
@@ -113,8 +118,12 @@ function removePrinter(printerData) {
   var img = getPrinter(printerData);
   if(!img) return;
   console.log("removePrinter: ",printerData.id,printerData.name);
-  
   container.removeChild(img);
+  
+  printerSockets[printerData.id].disconnect();
+  printerSockets[printerData.id].removeAllListeners();
+  webcamSockets[printerData.id].disconnect();
+  ss(webcamSockets[printerData.id]).removeAllListeners();
 }
 function getPrinter(printerData) {
   return document.querySelector("#printers #printer-"+printerData.id);
@@ -122,22 +131,26 @@ function getPrinter(printerData) {
 
 function connectTo(nsp,callback) {
   console.log(nsp+": connecting");
-  //if(socketHash[nsp]) return socket;
-  //console.log(nsp+": really connecting");
   var nspURL = CLOUD_URL+nsp+'?key='+userKey;
-  //var socket = io(nspURL, {forceNew:true});
-  //socketHash[nsp] = socket;
-  var socket = io(nspURL);
-  if(!socket.connected) {
-    socket.once('connect',function() {
-      console.log(nsp+": connected");
-      if(callback) callback(null,socket);
-    });
-    socket.once('error',function(err) {
-      console.log(nsp+": error: ",err);
-      if(callback) callback(err);
-    });
+  console.log('url: ',nspURL);
+  var socket = io(nspURL,{autoConnect:false});
+  if(socket.connected) {
+    if(callback) callback(null,socket);
+    return socket;
   }
+  socket.connect();
+  function onConnect() {
+    console.log(nsp+": connected");
+    socket.removeListener('error',onError);
+    if(callback) callback(null,socket);
+  }
+  function onError(err) {
+    console.log(nsp+": error: ",err);
+    socket.removeListener('connect',onConnect);
+    if(callback) callback(err);
+  }
+  socket.once('connect', onConnect);
+  socket.once('error', onError); 
   return socket;
 }
 function createAnyEvents(socket) {
