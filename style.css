@@ -2,16 +2,14 @@ body {
   padding: 10px;
 }
 .printer {
-  width: 640px;
+  width: 400px;
   max-width: 100%;
   background: #333;
   margin: 0 10px 10px 0;
-  display: block;
   float: left;
 }
 .printer img{
-  width: 640px;
-  max-width: 100%;
+  width: 100%;
 }
 .printer p{
   color: #fff;
@@ -19,7 +17,7 @@ body {
 }
 .printer pre{
   color: #eee;
-  font-size: 80%;
+  font-size: 68%;
   margin: 0.5em 0.5em;
 }
 
