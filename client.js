@@ -13,8 +13,9 @@ function init() {
   if(appData === null) return register();
   appData = JSON.parse(appData);
   userKey = appData.userKey;
-  rootSocket = connectTo("/");
-  rootSocket.once("connect",function() {
+  // login to root, test if user is known. 
+  // forceNew needed to apply url param changes (after register)
+  rootSocket = connectTo("/",{forceNew:true}, function() {
     connectTo("/localprinters",function(err,nsp) {
       nsp.on("appeared",function(printerData) {
         console.log("localprinters appeared: ",printerData.id,printerData.name);
@@ -35,7 +36,11 @@ function init() {
     });
   });
   rootSocket.on('error',function(err) {
-    if(err === "User unknown") register();
+    if(err === "User unknown") {
+      rootSocket.disconnect();
+      rootSocket.removeAllListeners();
+      register();
+    }
   });
 }
 function register() {
@@ -129,11 +134,17 @@ function getPrinter(printerData) {
   return document.querySelector("#printers #printer-"+printerData.id);
 }
 
-function connectTo(nsp,callback) {
+function connectTo(nsp,opts,callback) {
   console.log(nsp+": connecting");
+  if (typeof opts === 'function') {
+    callback = opts;
+    opts = null;
+  }
+  opts = opts || {};
+  opts.autoConnect = false;
   var nspURL = CLOUD_URL+nsp+'?key='+userKey;
-  console.log('url: ',nspURL);
-  var socket = io(nspURL,{autoConnect:false});
+  console.log('url: ',nspURL,opts);
+  var socket = io(nspURL,opts);
   if(socket.connected) {
     if(callback) callback(null,socket);
     return socket;
