@@ -98,7 +98,7 @@ function addPrinter(printerData) {
     webcamSockets[printerData.id] = nsp;
     ss(nsp).on('image', function(stream) {
       var imageIndex = imageCounter++;
-      //console.log(printerData.id+": "+imageIndex+": on image");
+      console.log(printerData.id+": "+imageIndex+": on image");
       var binaryString = "";
       stream.on('data', function(data) {
         console.log(printerData.id+": "+imageIndex+": on data");
