@@ -157,8 +157,8 @@ function connectTo(nsp,opts,callback) {
   }
   function onError(err) {
     console.log(nsp+": error: ",err);
-    socket.removeListener('connect',onConnect);
-    if(callback) callback(err);
+    //socket.removeListener('connect',onConnect);
+    //if(callback) callback(err);
   }
   socket.once('connect', onConnect);
   socket.once('error', onError); 
