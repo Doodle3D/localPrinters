@@ -103,18 +103,18 @@ function addPrinter(printerData) {
     webcamSockets[printerData.id] = nsp;
     ss(nsp).on('image', function(stream) {
       var imageIndex = imageCounter++;
-      console.log(printerData.id+": "+imageIndex+": on image");
+      console.log(printerData.id+": "+imageIndex+": on image ("+stream.id+")");
       var binaryString = "";
       stream.on('data', function(data) {
-        console.log(printerData.id+": "+imageIndex+": on data");
+        console.log(printerData.id+": "+imageIndex+": on data ("+stream.id+")");
         for(var i=0;i<data.length;i++) {
             binaryString+=String.fromCharCode(data[i]);
         }
       });
       stream.on('end', function() {
-        console.log(printerData.id+": "+imageIndex+": on end");
         webcamElement.setAttribute("src","data:image/jpg;base64,"+window.btoa(binaryString));
         binaryString = "";
+        console.log(printerData.id+": "+imageIndex+": on end ("+stream.id+")");
       });
     });
   });
