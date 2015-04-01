@@ -112,9 +112,11 @@ function addPrinter(printerData) {
         }
       });
       stream.on('end', function() {
-        webcamElement.setAttribute("src","data:image/jpg;base64,"+window.btoa(binaryString));
-        binaryString = "";
         console.log(printerData.id+": "+imageIndex+": on end ("+stream.id+")");
+        if(binaryString !== "") {
+          webcamElement.setAttribute("src","data:image/jpg;base64,"+window.btoa(binaryString));
+          binaryString = "";
+        }
       });
     });
   });
